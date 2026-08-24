@@ -2,6 +2,12 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
+  testEnvironmentOptions: {
+    // @tastic/core exposes a "browser" export condition pointing at raw .ts
+    // source. jsdom activates that condition by default, which sends Jest to
+    // unbuilt TS in node_modules instead of the compiled dist output.
+    customExportConditions: []
+  },
   roots: ['<rootDir>/src'],
   transform: {
     '^.+\\.tsx?$': [
