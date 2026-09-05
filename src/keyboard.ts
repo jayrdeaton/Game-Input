@@ -7,13 +7,22 @@ export interface DirectionKeyMap {
   right: string
 }
 
-// Three common local-multiplayer keyboard splits, lowercased to match resolveKeyDirection's own
-// case-insensitive comparison. Not exhaustive — pass your own DirectionKeyMap for anything else (a
-// custom scheme, or a 4th simultaneous local player).
-export const KEY_SCHEMES: Record<'wasd' | 'arrows' | 'ijkl', DirectionKeyMap> = {
+// The full set of local-multiplayer keyboard splits this package knows about. Not exhaustive — pass
+// your own DirectionKeyMap to resolveKeyDirection for anything else (a custom scheme, or a 4th
+// simultaneous local player). Deliberately excludes a "mouse"/"none" member: a scheme with no keys at
+// all isn't a DirectionKeyMap, so a caller layering one on top of this (see resolveSchemeDirection's
+// own doc) handles it before ever reaching this package, not as a member of this type.
+export type KeyScheme = 'wasd' | 'arrows' | 'ijkl' | 'numpad'
+
+// wasd/arrows/ijkl are lowercased to match resolveKeyDirection's own case-insensitive comparison
+// against KeyboardEvent.key. numpad is the odd one out — see resolveSchemeDirection's own comment for
+// why its values are matched against KeyboardEvent.code instead, and must be read through that
+// function (or the same .code-based comparison done by hand) rather than resolveKeyDirection directly.
+export const KEY_SCHEMES: Record<KeyScheme, DirectionKeyMap> = {
   wasd: { up: 'w', down: 's', left: 'a', right: 'd' },
   arrows: { up: 'arrowup', down: 'arrowdown', left: 'arrowleft', right: 'arrowright' },
-  ijkl: { up: 'i', down: 'k', left: 'j', right: 'l' }
+  ijkl: { up: 'i', down: 'k', left: 'j', right: 'l' },
+  numpad: { up: 'numpad8', down: 'numpad2', left: 'numpad4', right: 'numpad6' }
 }
 
 // Maps a raw keyboard event key (e.g. from a `keydown` listener's `event.key`) to a Direction given a
@@ -28,4 +37,16 @@ export function resolveKeyDirection(key: string, keyMap: DirectionKeyMap): Direc
   if (normalized === keyMap.left) return 'left'
   if (normalized === keyMap.right) return 'right'
   return null
+}
+
+// The one entry point that knows all four KEY_SCHEMES correctly, including numpad's own quirk:
+// resolveKeyDirection alone isn't enough there, because a numpad key's `.key` value flips between a
+// digit ('8') and its NumLock-off meaning ('ArrowUp', etc.) depending on NumLock state, while `.code`
+// stays 'Numpad8' either way — and matching by `.code` also means numpad never collides with the
+// top-row digit keys, which report 'Digit8' rather than 'Numpad8'. wasd/arrows/ijkl have no such
+// ambiguity and are matched by `.key` as usual. Takes just the two properties this needs (not the
+// whole KeyboardEvent) so a caller can pass a plain object in tests without constructing a real event.
+export function resolveSchemeDirection(event: Pick<KeyboardEvent, 'key' | 'code'>, scheme: KeyScheme): Direction | null {
+  if (scheme === 'numpad') return resolveKeyDirection(event.code, KEY_SCHEMES.numpad)
+  return resolveKeyDirection(event.key, KEY_SCHEMES[scheme])
 }

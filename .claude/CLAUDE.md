@@ -20,7 +20,7 @@ registry).
 ```bash
 npm run lint         # ESLint
 npm run fix           # ESLint --fix
-npm test              # Jest (29 tests)
+npm test              # Jest (35 tests)
 npm run test:watch    # Jest --watchAll
 npm run typecheck     # tsc --noEmit
 npm run build         # tsup, outputs CJS + ESM + types to dist/
@@ -49,7 +49,8 @@ src/
   index.ts      - public exports barrel
   aim.ts        - computeAimVector: drag-distance-based launch velocity (pull-and-release aim); AimResult
   direction.ts  - resolveSwipeDirection, flipDirection, isOppositeDirection, applyControlInversion, isEffectiveTurn; Direction type
-  keyboard.ts   - resolveKeyDirection + KEY_SCHEMES (wasd/arrows/ijkl); DirectionKeyMap type
+  keyboard.ts   - resolveKeyDirection + KEY_SCHEMES (wasd/arrows/ijkl/numpad) + resolveSchemeDirection
+                  (the numpad-aware entry point — see its own doc comment); DirectionKeyMap/KeyScheme types
   tap.ts        - isTap: tap-vs-drag classification by total drift distance
   throw.ts      - computeThrowVelocity: release-velocity-based launch velocity (flick throw)
   __tests__/
